@@ -10,12 +10,6 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
-    def _send_order_confirmation_mail(self):
-        for order in self:
-            if order.website_id:
-                continue  # Skip email para órdenes del website
-            super(SaleOrder, order)._send_order_confirmation_mail()
-
     def _check_company(self, fnames=None):
         _logger.info("Entering _check_company for record IDs: %s", self.ids)
         if fnames is None:
