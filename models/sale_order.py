@@ -1,7 +1,7 @@
 from odoo import models
 from odoo.exceptions import UserError
 from odoo.tools.translate import _
-from odoo.tools.safe_eval import _lt  # Para _lt si no está importado
+from odoo.tools.translate import _lt  # Para mensajes lazy traducibles
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -52,20 +52,19 @@ class SaleOrder(models.Model):
                         "partner_invoice_id",
                         "partner_shipping_id",
                     ]:
-                        for corecord in corecords:
-                            if (
-                                corecord.company_id
-                                and corecord.company_id.parent_path
-                                and f"{record.company_id.id}/"
-                                in corecord.company_id.parent_path
-                            ):
-                                bypassed = True
-                                _logger.info(
-                                    "Bypassing %s for child company %s",
-                                    name,
-                                    corecord.company_id.display_name,
-                                )
-                                break  # Si al menos uno es child, bypass (ajusta si querés estrictamente todos)
+                        bypassed = all(
+                            corecord.company_id
+                            and corecord.company_id.parent_path
+                            and f"{record.company_id.id}/"
+                            in corecord.company_id.parent_path
+                            for corecord in corecords
+                        )
+                        if bypassed:
+                            _logger.info(
+                                "Bypassing %s for child company %s",
+                                name,
+                                corecords.company_id.display_name,
+                            )
                     if not bypassed:
                         domain = corecords._check_company_domain(company)
                         if domain and corecords != corecords.with_context(
@@ -92,19 +91,18 @@ class SaleOrder(models.Model):
                         "partner_invoice_id",
                         "partner_shipping_id",
                     ]:
-                        for corecord in corecords:
-                            if (
-                                corecord.company_id
-                                and corecord.company_id.parent_path
-                                and f"{company.id}/" in corecord.company_id.parent_path
-                            ):
-                                bypassed = True
-                                _logger.info(
-                                    "Bypassing property %s for child company %s",
-                                    name,
-                                    corecord.company_id.display_name,
-                                )
-                                break
+                        bypassed = all(
+                            corecord.company_id
+                            and corecord.company_id.parent_path
+                            and f"{company.id}/" in corecord.company_id.parent_path
+                            for corecord in corecords
+                        )
+                        if bypassed:
+                            _logger.info(
+                                "Bypassing property %s for child company %s",
+                                name,
+                                corecords.company_id.display_name,
+                            )
                     if not bypassed:
                         domain = corecords._check_company_domain(company)
                         if domain and corecords != corecords.with_context(
